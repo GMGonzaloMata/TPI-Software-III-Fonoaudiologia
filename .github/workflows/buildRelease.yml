@@ -1,0 +1,77 @@
+name: Flutter Build Release APK
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.10.0'
+          channel: 'stable'
+      
+      # Restaurar caché de dependencias de pub
+      - name: Restore pub cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.PUB_CACHE }}
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+      
+      # Restaurar caché de Gradle
+      - name: Restore Gradle cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      
+      # Restaurar caché de Android build
+      - name: Restore Android build cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.android/build-cache
+            android/.gradle
+          key: ${{ runner.os }}-android-build-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-build-
+      
+      # Verificar integridad del proyecto Flutter
+      - name: Flutter doctor
+        run: flutter doctor -v
+      
+      # Instalar dependencias
+      - name: Install dependencies
+        run: flutter pub get
+      
+      # Compilar APK
+      - name: Build APK
+        run: flutter build apk --release
+      
+      # Guardar APK como artefacto
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
