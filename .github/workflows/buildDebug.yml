@@ -22,8 +22,14 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.10.0'
+          flutter-version: '3.19.0' # Versión más reciente que incluye Dart 3.3.0+
           channel: 'stable'
+      
+      # Verificar versiones de Flutter y Dart
+      - name: Check Flutter and Dart versions
+        run: |
+          flutter --version
+          dart --version
       
       # Restaurar caché de dependencias de pub
       - name: Restore pub cache
@@ -55,10 +61,6 @@ jobs:
           key: ${{ runner.os }}-android-build-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             ${{ runner.os }}-android-build-
-      
-      # Verificar integridad del proyecto Flutter
-      - name: Flutter doctor
-        run: flutter doctor -v
       
       # Instalar dependencias
       - name: Install dependencies
